@@ -1,12 +1,13 @@
 {
-  "name": "",
+  "name": "sittard-go-bot",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "SittardGoBot.js",
+  "homepage": "https://github.com/SittardGo/bot-bootstrap",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "Sittard Go",
   "license": "ISC",
   "dependencies": {
     "argparse": "^1.0.9",

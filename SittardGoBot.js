@@ -86,7 +86,7 @@ class Bot {
         });
 
         for (let c in userConfig) {
-            let v = c.replace(/-([a-z])/g, function (g) { return g[1].toUpperCase(); });
+            let v = c.replace(/-([a-z])/g, g => g[1].toUpperCase());
             CONFIG[v] = userConfig[c];
         }
     }

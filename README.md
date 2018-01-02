@@ -11,6 +11,12 @@ Some of the helper methods are:
   - Creating rich embeds
   - etc...
 
+# Installation
+
+```bash
+$ npm install sittard-go-bot
+```
+
 # Usage
 To create a bot call `new SittardGoBot.Bot(config)`, where the
 `config` contains all your channel and bot data. After that

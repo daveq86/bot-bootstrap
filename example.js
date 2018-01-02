@@ -1,11 +1,7 @@
 /* jshint esversion: 6 */
 
 const SittardGoBot = require('./SittardGoBot.js');
-
-const testToken = '0';
-const testClientId = '0';
-const version = '1.1';
-const description = 'This is an example file';
+const config = require('./config.default.json');
 
 const exampleArguments = [
     [['-f', '--flag-set'], {
@@ -24,9 +20,7 @@ const exampleArguments = [
     }]
 ];
 
-const myBot = new SittardGoBot.Bot(
-    testToken, testClientId, description, version
-);
+const myBot = new SittardGoBot.Bot(config, exampleArguments);
 
 console.log(myBot.getCliArgs());
 
@@ -35,18 +29,16 @@ myBot.on('READY', (event, b, c) => {
     console.log(b);
     console.log(c);
     
-}, ['extra arg', 'tweede arg']);
+}, ['extra arg', 'second arg']);
 
 myBot.on('DEBUG', (event, message, c) => {
-    
+    console.log(event, message, c);
 });
 
-this.bot.on('MESSAGE', receiveMessage.bind(this));
+myBot.on('MESSAGE', receiveMessage.bind(this));
 
-function receiveMessage(e, msgObj) {
+function receiveMessage(event, msgObj) {
     // do something
 }
 
 myBot.connect();
-
-

@@ -1,15 +1,8 @@
 /* jshint esversion: 6 */
-
-const GUILD_ID =  '0';
-const ADMIN_IDS = {
-    name : '0',
-};
-
-const CHANNEL_IDS = {
-    main  : '0',
-    test  : '0',
-    raid  : '0',
-};
+const Discord = require('discord.js');
+const EventBus = require('eventbusjs');
+const ArgumentParser = require('argparse').ArgumentParser;
+const fs = require('fs');
 
 const EVENTS = {
     'READY' : 'ready',
@@ -17,14 +10,15 @@ const EVENTS = {
     'MESSAGE' : 'message',
 };
 
-const MOD_ROLE_NAMES = [
-    'mod',
-    'moderator',
-    'moderators',
-    'admin',
-    'administrator',
-    'administrators',
+const REQUIRED_CONFIG_FIELDS = [
+    'guild-id',
+    'bot-token',
+    'client-id',
+    'version',
+    'description',
 ];
+
+const CONFIG = {};
 
 const TEAM_ICON_CACHE = {};
 const TEAM_ICONS = [
@@ -39,34 +33,26 @@ const DEFAULT_ARGS = [
         help: 'Get the url for registering the bot',
         action: 'storeConst',
         constant: true
+    }],
+    [['-g', '--generate'], {
+        help: 'Generate a config file to populate',
+        action: 'storeConst',
+        constant: true
     }]
 ];
 
-const Discord = require('discord.js');
-const EventBus = require('eventbusjs');
-const ArgumentParser = require('argparse').ArgumentParser;
-
-let userArgs = {};
+let userArgs     = {};
 let cliArgParser = false;
-
-let clientId = false;
-let currentGuild = false;
-
-let client = false;
-let token = false;
+let client       = false;
 
 class Bot {
 
-    constructor(botToken, botClientId, description, version, cliArgs) {
-        if (!botToken) {
-            throw new Exception('Token not defined');
-        }
+    constructor(userConfig, cliArgs) {
+        this.parseConfig(userConfig);
 
-        client  = new Discord.Client();
-        token = botToken;
-        clientId = botClientId;
-
-        this.setUsage(description, version, cliArgs);
+        client   = new Discord.Client();
+        
+        this.setUsage(CONFIG.description, CONFIG.version, cliArgs);
 
         // Exit if request for registration url
         if (this.getCliArgs().url) {
@@ -77,8 +63,49 @@ class Bot {
         this.initEvents();
     }
 
+    parseConfig(userConfig) {
+        if (!userConfig) {
+            this.setUsage();
+            if (this.getCliArgs().generate) {
+                this.generateConfig();
+                console.log('Config file generated!');
+                console.log('config.json is located in '+process.cwd());
+                process.exit(0);
+            }
+
+            console.log('No configuration found!');
+            console.log('You can generate a config file using the flag -g');
+            process.exit(0);
+        }
+        
+        REQUIRED_CONFIG_FIELDS.map(f => {
+            if (!userConfig.hasOwnProperty(f)) {
+                console.error('Config property "'+f+'" is missing');
+                process.exit(0);
+            }
+        });
+
+        for (let c in userConfig) {
+            let v = c.replace(/-([a-z])/g, function (g) { return g[1].toUpperCase(); });
+            CONFIG[v] = userConfig[c];
+        }
+    }
+
+    generateConfig() {
+        try {
+            fs.writeFileSync(
+                process.cwd()+'/config.json',
+                fs.readFileSync(__dirname+'/config.default.json')
+            );
+        } catch(e) {
+            console.log('Could not write config file!');
+            console.log(e);
+            process.exit(0);
+        }
+    }
+
     connect() {
-        return client.login(token);
+        return client.login(CONFIG.botToken);
     }
 
     initEvents() {
@@ -101,7 +128,7 @@ class Bot {
         });
     }
 
-    setUsage(description = '', version = '1.0', cliArgs = []) {
+    setUsage(description = '', version = '0', cliArgs = []) {
         cliArgParser = new ArgumentParser({
             description: description,
             version: version,
@@ -127,11 +154,11 @@ class Bot {
     getAdminId(name) {
         name = name.toLowerCase();
         
-        if (!ADMIN_IDS.hasOwnProperty(name)) {
+        if (!CONFIG.adminIds.hasOwnProperty(name)) {
             return false;
         }
 
-        return ADMIN_IDS[name];
+        return CONFIG.adminIds[name];
     }
 
     getChannel(channel) {
@@ -152,11 +179,11 @@ class Bot {
     getChannelId(name) {
         name = name.toLowerCase();
 
-        if (!CHANNEL_IDS.hasOwnProperty(name)) {
+        if (!config.channelIds.hasOwnProperty(name)) {
             return false;
         }
 
-        return CHANNEL_IDS[name];
+        return config.channelIds[name];
     }
 
     reply(usrMsgObj, botMsgTxt, replyToBots = false) {
@@ -195,7 +222,7 @@ class Bot {
     }
 
     getGuildChannel(channelId, guildId = false) {
-        guildId = (guildId)? guildId : GUILD_ID;
+        guildId = (guildId)? guildId : CONFIG.guildId;
         
         try {
             return new Discord.GuildChannel(
@@ -209,7 +236,7 @@ class Bot {
     }
 
     getGuild(guildId = false) {
-        guildId = (guildId)? guildId : GUILD_ID;
+        guildId = (guildId)? guildId : CONFIG.guildId;
         return client.guilds.get(guildId);
     }
 
@@ -241,16 +268,16 @@ class Bot {
             memberTeam = TEAM_ICONS.find(t => t.team === role);
         });
         
-        return (memberTeam.hasOwnProperty('team'))? memberTeam.team : '';
+        return (memberTeam)? memberTeam.team : '';
     }
 
     getRegisterURL() {
-        return REGISTER_URL.replace('{CLIENT_ID}', clientId);
+        return REGISTER_URL.replace('{CLIENT_ID}', CONFIG.clientId);
     }
 
     userIsMod(memberObj) {
         const res = memberObj.roles.filterArray((r) => {
-            return MOD_ROLE_NAMES.indexOf(r.name.toLowerCase()) > -1;
+            return CONFIG.modRoleNames.indexOf(r.name.toLowerCase()) > -1;
         });
 
         return res.length > 0;

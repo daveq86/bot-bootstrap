@@ -1,0 +1,22 @@
+{
+    "guild-id"    : "0",
+    "bot-token"   : "0",
+    "client-id"   : "0",
+    "version"     : "0.1",
+    "description" : "A Pokémon Go Discord Bot",
+    
+    "admin-ids" : {
+        "name" : "0"
+    },
+    "channel-ids": {
+        "main" : "0"
+    },
+    "mod-role-names": [
+        "mod",
+        "moderator",
+        "moderators",
+        "admin",
+        "administrator",
+        "administrators"
+    ]
+}

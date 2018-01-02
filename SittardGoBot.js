@@ -152,6 +152,10 @@ class Bot {
     }
 
     getAdminId(name) {
+        if (!CONFIG.hasOwnProperty('adminIds')) {
+            return false;
+        }
+
         name = name.toLowerCase();
         
         if (!CONFIG.adminIds.hasOwnProperty(name)) {
@@ -177,6 +181,10 @@ class Bot {
     }
 
     getChannelId(name) {
+        if (!CONFIG.hasOwnProperty('channelIds')) {
+            return false;
+        }
+        
         name = name.toLowerCase();
 
         if (!config.channelIds.hasOwnProperty(name)) {
@@ -276,6 +284,10 @@ class Bot {
     }
 
     userIsMod(memberObj) {
+        if (!CONFIG.hasOwnProperty('modRoleNames')) {
+            return false;
+        }
+
         const res = memberObj.roles.filterArray((r) => {
             return CONFIG.modRoleNames.indexOf(r.name.toLowerCase()) > -1;
         });

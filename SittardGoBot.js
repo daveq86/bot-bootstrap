@@ -195,11 +195,11 @@ class Bot {
         
         name = name.toLowerCase();
 
-        if (!config.channelIds.hasOwnProperty(name)) {
+        if (!CONFIG.channelIds.hasOwnProperty(name)) {
             return false;
         }
 
-        return config.channelIds[name];
+        return CONFIG.channelIds[name];
     }
 
     reply(usrMsgObj, botMsgTxt, replyToBots = false) {

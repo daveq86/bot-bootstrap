@@ -8,6 +8,7 @@ const EVENTS = {
     'READY' : 'ready',
     'DEBUG' : 'debug',
     'MESSAGE' : 'message',
+    'ERROR' : 'error',
 };
 
 const REQUIRED_CONFIG_FIELDS = [
@@ -61,6 +62,13 @@ class Bot {
         }
 
         this.initEvents();
+
+        // SHOULD FIX: Anti-pattern, but for now I don't
+        // want the bots to die.
+        process.on('uncaughtException', function (error) {
+            console.log(error.stack);
+            EventBus.dispatch(EVENTS.ERROR, this, error);
+        });
     }
 
     parseConfig(userConfig) {

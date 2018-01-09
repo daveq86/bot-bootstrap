@@ -5,6 +5,7 @@ This is created to aid Pokémon Go groups, but can
 be adapted for more general use.
 
 Some of the helper methods are:
+
   - Reply; To reply directly to a message object (bot messages are ignored by default)
   - Send; Just use a channel name or id to post a message.
   - Finding admins / mods

@@ -225,6 +225,20 @@ class Bot {
             msgObj.member.nickname : msgObj.author.username;
     }
 
+    getUsernameOfUserId(userId) {
+        const guildUser = this.getUserById(userId);
+
+        if (!guildUser) {
+            return '';
+        }
+
+        if (guildUser.nickname) {
+            return guildUser.nickname;
+        }
+
+        return guildUser.user.username;
+    }
+
     getMsgAuthorId(msgObj) {
         return msgObj.author.id;
     }

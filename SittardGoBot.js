@@ -294,6 +294,10 @@ class Bot {
         let memberTeam = '';
         
         memberObj.roles.map(r => {
+            if (memberTeam) {
+                return;
+            }
+ 
             const role = r.name.toLowerCase();
             memberTeam = TEAM_ICONS.find(t => t.team === role);
         });

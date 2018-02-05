@@ -51,7 +51,8 @@ class Bot {
     constructor(userConfig, cliArgs) {
         this.parseConfig(userConfig);
 
-        client   = new Discord.Client();
+        client = new Discord.Client();
+        this.initEvents();
         
         this.setUsage(CONFIG.description, CONFIG.version, cliArgs);
 
@@ -61,7 +62,6 @@ class Bot {
             process.exit(0);
         }
 
-        this.initEvents();
 
         // SHOULD FIX: Anti-pattern, but for now I don't
         // want the bots to die.
@@ -131,8 +131,14 @@ class Bot {
         });
 
         client.on('error', e => {
+            console.log('A socket error occured');
             console.trace(e);
-            throw new Exception('A socket error occured');
+            
+            // Retry the connection
+            setTimeout(_ => {
+                client = new Discord.Client();
+                this.initEvents();
+            }, 2000);
         });
     }
 

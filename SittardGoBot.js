@@ -227,6 +227,12 @@ class Bot {
     }
 
     getMessageUsername(msgObj) {
+        // Sometimes member is null, seems
+        // API response related error
+        if (!msgObj.member) {
+            return 'unknown';
+        }
+
         return (msgObj.member.nickname)?
             msgObj.member.nickname : msgObj.author.username;
     }
@@ -324,6 +330,16 @@ class Bot {
             return CONFIG.modRoleNames.indexOf(r.name.toLowerCase()) > -1;
         });
 
+        return res.length > 0;
+    }
+
+    userHasRole(memberObj, roleName) {
+        roleName = roleName.toLowerCase();
+
+        const res = memberObj.roles.filterArray((r) => {
+            return r.name.toLowerCase() === roleName;
+        });
+        
         return res.length > 0;
     }
 

@@ -116,6 +116,15 @@ class Bot {
         return client.login(CONFIG.botToken);
     }
 
+    reconnect() {
+        client.destroy()
+        .then(_ => {
+            client = new Discord.Client();
+            this.initEvents();
+            this.connect();
+        });
+    }
+
     initEvents() {
         client.on('ready', () => {
             console.log('Bot logged in');
@@ -131,14 +140,10 @@ class Bot {
         });
 
         client.on('error', e => {
-            console.log('A socket error occured');
+            console.log('An error occured');
             console.trace(e);
             
-            // Retry the connection
-            setTimeout(_ => {
-                client = new Discord.Client();
-                this.initEvents();
-            }, 2000);
+            this.reconnect()
         });
     }
 
@@ -277,9 +282,22 @@ class Bot {
         }
     }
 
-    getGuild(guildId = false) {
+    getGuild(guildId = false, retryCount = 0) {
+        retryCount++;
         guildId = (guildId)? guildId : CONFIG.guildId;
-        return client.guilds.get(guildId);
+        const guild = client.guilds.get(guildId);
+
+        if (!guild || !guild.available) {
+            if (retry === 5) {
+                throw 'could not get guild';
+            }
+
+            setTimeout(() => {
+                this.getGuild(guildId, retryCount);
+            }, 200);
+        }
+
+        return guild
     }
 
     getUserById(userId, guildId = false) {

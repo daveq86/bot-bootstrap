@@ -285,7 +285,7 @@ class Bot {
     getGuild(guildId = false, retryCount = 0) {
         retryCount++;
         guildId = (guildId)? guildId : CONFIG.guildId;
-        const guild = client.guilds.get(guildId);
+        let guild = client.guilds.get(guildId);
 
         if (!guild || !guild.available) {
             if (retry === 5) {
@@ -293,7 +293,7 @@ class Bot {
             }
 
             setTimeout(() => {
-                this.getGuild(guildId, retryCount);
+                guild = this.getGuild(guildId, retryCount);
             }, 200);
         }
 

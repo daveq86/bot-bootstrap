@@ -66,6 +66,13 @@ class Bot {
         // SHOULD FIX: Anti-pattern, but for now I don't
         // want the bots to die.
         process.on('uncaughtException', function (error) {
+            if (err.code === 'ECONNRESET') {
+                console.log('Got an ECONNRESET! This is *probably* not an error. Stacktrace:');
+                console.log(error.stack);
+                return;
+            }
+
+
             console.log(error.stack);
             EventBus.dispatch(EVENTS.ERROR, this, error);
         });

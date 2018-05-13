@@ -62,6 +62,8 @@ class Bot {
             process.exit(0);
         }
 
+        // Set the max listeners to something higher
+        require('events').EventEmitter.defaultMaxListeners = 50;
 
         // SHOULD FIX: Anti-pattern, but for now I don't
         // want the bots to die.
@@ -147,6 +149,12 @@ class Bot {
         });
 
         client.on('error', e => {
+            if (e.code === 'ECONNRESET') {
+                console.log('Got an ECONNRESET! This is *probably* not an error. Stacktrace:');
+                console.log(error.stack);
+                return;
+            }
+
             console.log('An error occured');
             console.trace(e);
             

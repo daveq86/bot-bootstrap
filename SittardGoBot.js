@@ -50,9 +50,6 @@ let client       = false;
 class Bot {
 
     constructor(userConfig, cliArgs) {
-        // Set the max listeners to something higher
-        events.defaultMaxListeners = 500;
-
         this.parseConfig(userConfig);
 
         client = new Discord.Client();

@@ -20,7 +20,6 @@
   "dependencies": {
     "argparse": "^1.0.10",
     "discord.js": "^11.3.2",
-    "eventbusjs": "^0.2.0",
-    "uws": "^9.148.0"
+    "eventbusjs": "^0.2.0"
   }
 }

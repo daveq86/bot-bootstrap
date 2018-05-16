@@ -5,10 +5,11 @@ const ArgumentParser = require('argparse').ArgumentParser;
 const fs = require('fs');
 
 const EVENTS = {
-    'READY' : 'ready',
-    'DEBUG' : 'debug',
-    'MESSAGE' : 'message',
-    'ERROR' : 'error',
+    'READY'     : 'ready',
+    'DEBUG'     : 'debug',
+    'MESSAGE'   : 'message',
+    'ERROR'     : 'error',
+    'RECONNECT' : 'reconnect'
 };
 
 const REQUIRED_CONFIG_FIELDS = [
@@ -49,6 +50,9 @@ let client       = false;
 class Bot {
 
     constructor(userConfig, cliArgs) {
+        // Set the max listeners to something higher
+        events.defaultMaxListeners = 500;
+
         this.parseConfig(userConfig);
 
         client = new Discord.Client();
@@ -62,20 +66,10 @@ class Bot {
             process.exit(0);
         }
 
-        // Set the max listeners to something higher
-        require('events').EventEmitter.defaultMaxListeners = 50;
-
         // SHOULD FIX: Anti-pattern, but for now I don't
         // want the bots to die.
         process.on('uncaughtException', function (error) {
-            if (error.code === 'ECONNRESET') {
-                console.log('Got an ECONNRESET! This is *probably* not an error. Stacktrace:');
-                console.log(error.stack);
-                return;
-            }
-
-
-            console.log(error.stack);
+            console.log(error);
             EventBus.dispatch(EVENTS.ERROR, this, error);
         });
     }
@@ -126,18 +120,23 @@ class Bot {
     }
 
     reconnect() {
+        console.log('Destroying and connecting client...');
         client.destroy()
         .then(_ => {
             client = new Discord.Client();
             this.initEvents();
-            this.connect();
+            this.connect().then(_ => {
+                console.log('Dispatching reconnect event');
+                setTimeout(_ => EventBus.dispatch(EVENTS.RECONNECT, this), 1000);
+            });
         });
     }
 
     initEvents() {
         client.on('ready', () => {
             console.log('Bot logged in');
-            EventBus.dispatch(EVENTS.READY, this);
+            setTimeout(_ => client.setMaxListeners(1000), 1000);
+            setTimeout(_ => EventBus.dispatch(EVENTS.READY, this), 1500);
         });
 
         client.on('debug', message => {
@@ -148,17 +147,25 @@ class Bot {
             EventBus.dispatch(EVENTS.MESSAGE, this, message);
         });
 
-        client.on('error', e => {
-            if (e.code === 'ECONNRESET') {
-                console.log('Got an ECONNRESET! This is *probably* not an error. Stacktrace:');
-                console.log(error.stack);
+        client.on('disconnect', (msg, code) => {
+            if (code === 0) {
+                console.log('Login error', msg);
                 return;
             }
 
-            console.log('An error occured');
-            console.trace(e);
-            
-            this.reconnect()
+            console.log('disconnect received');
+            this.reconnect();
+        });
+
+        client.on('error', errEvent => {
+            if (errEvent.error.code === 'ECONNRESET') {
+                console.log('ECONNRESET Error:', errEvent);
+                this.reconnect();
+                return;
+            }
+
+            console.log('Client Error:', errEvent);            
+            this.reconnect();
         });
     }
 
@@ -303,7 +310,7 @@ class Bot {
         let guild = client.guilds.get(guildId);
 
         if (!guild || !guild.available) {
-            if (retry === 5) {
+            if (retryCount === 5) {
                 throw 'could not get guild';
             }
 

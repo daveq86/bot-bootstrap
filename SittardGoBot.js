@@ -46,6 +46,7 @@ const DEFAULT_ARGS = [
 let userArgs     = {};
 let cliArgParser = false;
 let client       = false;
+let waitingForReconnect = false;
 
 class Bot {
 
@@ -54,7 +55,7 @@ class Bot {
 
         client = new Discord.Client();
         this.initEvents();
-        
+
         this.setUsage(CONFIG.description, CONFIG.version, cliArgs);
 
         // Exit if request for registration url
@@ -85,7 +86,7 @@ class Bot {
             console.log('You can generate a config file using the flag -g');
             process.exit(0);
         }
-        
+
         REQUIRED_CONFIG_FIELDS.map(f => {
             if (!userConfig.hasOwnProperty(f)) {
                 console.error('Config property "'+f+'" is missing');
@@ -120,12 +121,21 @@ class Bot {
         console.log('Destroying and connecting client...');
         client.destroy()
         .then(_ => {
-            client = new Discord.Client();
-            this.initEvents();
-            this.connect().then(_ => {
-                console.log('Dispatching reconnect event');
-                setTimeout(_ => EventBus.dispatch(EVENTS.RECONNECT, this), 1000);
-            });
+            if (waitingForReconnect) {
+                return;
+            }
+
+            console.log('waiting a few seconds before reconnect');
+            waitingForReconnect = true;
+
+            setTimeout(_ => {
+                client = new Discord.Client();
+                this.connect().then(_ => {
+                    console.log('Dispatching reconnect event');
+                    this.initEvents();
+                    setTimeout(_ => EventBus.dispatch(EVENTS.RECONNECT, this), 1000);
+                });
+            }, 6000)
         });
     }
 
@@ -161,7 +171,7 @@ class Bot {
                 return;
             }
 
-            console.log('Client Error:', errEvent);            
+            console.log('Client Error:', errEvent);
             this.reconnect();
         });
     }
@@ -195,7 +205,7 @@ class Bot {
         }
 
         name = name.toLowerCase();
-        
+
         if (!CONFIG.adminIds.hasOwnProperty(name)) {
             return false;
         }
@@ -222,7 +232,7 @@ class Bot {
         if (!CONFIG.hasOwnProperty('channelIds')) {
             return false;
         }
-        
+
         name = name.toLowerCase();
 
         if (!CONFIG.channelIds.hasOwnProperty(name)) {
@@ -289,7 +299,7 @@ class Bot {
 
     getGuildChannel(channelId, guildId = false) {
         guildId = (guildId)? guildId : CONFIG.guildId;
-        
+
         try {
             return new Discord.GuildChannel(
                 client.guilds.get(guildId),
@@ -325,7 +335,7 @@ class Bot {
 
     getTeamIcon(team, guildId = false) {
         team = team.toLowerCase();
-        
+
         let teamObj = TEAM_ICONS.find(t => t.team === team);
         if (!teamObj) {
             return '';
@@ -341,16 +351,16 @@ class Bot {
 
     getTeamOfMember(memberObj) {
         let memberTeam = '';
-        
+
         memberObj.roles.map(r => {
             if (memberTeam) {
                 return;
             }
- 
+
             const role = r.name.toLowerCase();
             memberTeam = TEAM_ICONS.find(t => t.team === role);
         });
-        
+
         return (memberTeam)? memberTeam.team : '';
     }
 
@@ -376,7 +386,7 @@ class Bot {
         const res = memberObj.roles.filterArray((r) => {
             return r.name.toLowerCase() === roleName;
         });
-        
+
         return res.length > 0;
     }
 

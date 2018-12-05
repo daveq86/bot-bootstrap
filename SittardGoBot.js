@@ -249,7 +249,10 @@ class Bot {
             return;
         }
 
-        botMsgTxt = botMsgTxt.substr(0, MAX_MESSAGE_LENGTH)+'...';
+        if (botMsgTxt.length > MAX_MESSAGE_LENGTH) {
+            botMsgTxt = botMsgTxt.substr(0, MAX_MESSAGE_LENGTH)+'...';
+        }
+
         return usrMsgObj.channel.send(botMsgTxt);
     }
 
@@ -260,7 +263,10 @@ class Bot {
             return false;
         }
 
-        message = message.substr(0, MAX_MESSAGE_LENGTH)+'...';
+        if (message.length > MAX_MESSAGE_LENGTH) {
+            message = message.substr(0, MAX_MESSAGE_LENGTH)+'...';
+        }
+
         return channel.send(message);
     }
 

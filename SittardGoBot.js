@@ -20,6 +20,8 @@ const REQUIRED_CONFIG_FIELDS = [
     'description',
 ];
 
+const MAX_MESSAGE_LENGTH = 1996;
+
 const CONFIG = {};
 
 const TEAM_ICON_CACHE = {};
@@ -247,6 +249,7 @@ class Bot {
             return;
         }
 
+        botMsgTxt = botMsgTxt.substr(0, MAX_MESSAGE_LENGTH)+'...';
         return usrMsgObj.channel.send(botMsgTxt);
     }
 
@@ -257,6 +260,7 @@ class Bot {
             return false;
         }
 
+        message = message.substr(0, MAX_MESSAGE_LENGTH)+'...';
         return channel.send(message);
     }
 
@@ -366,6 +370,10 @@ class Bot {
 
     getRegisterURL() {
         return REGISTER_URL.replace('{CLIENT_ID}', CONFIG.clientId);
+    }
+
+    getMaxMessageLength() {
+        return MAX_MESSAGE_LENGTH;
     }
 
     userIsMod(memberObj) {
